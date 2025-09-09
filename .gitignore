@@ -1,0 +1,537 @@
+# Python .gitignore
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython
+*.c
+*.cpp
+*.h
+*.hpp
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask-SQLAlchemy
+*.db
+
+# Flask-Migrate
+migrations/versions/*.py
+
+# Flask-Uploads
+uploads/
+
+# Flask-Mail
+flask_mail.cache
+
+# Flask-Caching
+flask_cache.cache
+
+# Flask-Session
+flask_session/
+
+# Flask-WTF
+csrf_token
+
+# Flask-Login
+flask_login.cache
+
+# Flask-Admin
+admin/
+
+# Flask-RESTful
+api/
+
+# Flask-SocketIO
+socketio/
+
+# Flask-Security
+security/
+
+# Flask-User
+user/
+
+# Flask-Principal
+principal/
+
+# Flask-Babel
+translations/
+
+# Flask-Assets
+webassets.cache
+
+# Flask-DebugToolbar
+debug_toolbar/
+
+# Flask-Testing
+test_*.py
+
+# Flask-Script
+manage.py
+
+# Flask-Migrate
+migrations/
+
+# Flask-Login
+login_manager.cache
+
+# Flask-Mail
+mail.cache
+
+# Flask-Caching
+cache.cache
+
+# Flask-Session
+session.cache
+
+# Flask-WTF
+wtf.cache
+
+# Flask-Login
+login.cache
+
+# Flask-Admin
+admin.cache
+
+# Flask-RESTful
+rest.cache
+
+# Flask-SocketIO
+socketio.cache
+
+# Flask-Security
+security.cache
+
+# Flask-User
+user.cache
+
+# Flask-Principal
+principal.cache
+
+# Flask-Babel
+babel.cache
+
+# Flask-Assets
+assets.cache
+
+# Flask-DebugToolbar
+debug.cache
+
+# Flask-Testing
+testing.cache
+
+# Flask-Script
+script.cache
+
+# Flask-Migrate
+migrate.cache
+
+# Flask-Login
+login.cache
+
+# Flask-Mail
+mail.cache
+
+# Flask-Caching
+cache.cache
+
+# Flask-Session
+session.cache
+
+# Flask-WTF
+wtf.cache
+
+# Flask-Login
+login.cache
+
+# Flask-Admin
+admin.cache
+
+# Flask-RESTful
+rest.cache
+
+# Flask-SocketIO
+socketio.cache
+
+# Flask-Security
+security.cache
+
+# Flask-User
+user.cache
+
+# Flask-Principal
+principal.cache
+
+# Flask-Babel
+babel.cache
+
+# Flask-Assets
+assets.cache
+
+# Flask-DebugToolbar
+debug.cache
+
+# Flask-Testing
+testing.cache
+
+# Flask-Script
+script.cache
+
+# Flask-Migrate
+migrate.cache
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+instance/student_events.db
+
+# Uploaded files (keep structure but ignore actual files)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Security files
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Configuration files with sensitive data
+config.py
+secrets.py
+local_config.py
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Documentation builds
+docs/_build/
+docs/build/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Profiling
+*.prof
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython
+*.c
+*.cpp
+*.h
+*.hpp
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask-SQLAlchemy
+*.db
+
+# Flask-Migrate
+migrations/versions/*.py
+
+# Flask-Uploads
+uploads/
+
+# Flask-Mail
+flask_mail.cache
+
+# Flask-Caching
+flask_cache.cache
+
+# Flask-Session
+flask_session/
+
+# Flask-WTF
+csrf_token
+
+# Flask-Login
+flask_login.cache
+
+# Flask-Admin
+admin/
+
+# Flask-RESTful
+api/
+
+# Flask-SocketIO
+socketio/
+
+# Flask-Security
+security/
+
+# Flask-User
+user/
+
+# Flask-Principal
+principal/
+
+# Flask-Babel
+translations/
+
+# Flask-Assets
+webassets.cache
+
+# Flask-DebugToolbar
+debug_toolbar/
+
+# Flask-Testing
+test_*.py
+
+# Flask-Script
+manage.py
+
+# Flask-Migrate
+migrations/
+
+# Flask-Login
+login_manager.cache
+
+# Flask-Mail
+mail.cache
+
+# Flask-Caching
+cache.cache
+
+# Flask-Session
+session.cache
+
+# Flask-WTF
+wtf.cache
+
+# Flask-Login
+login.cache
+
+# Flask-Admin
+admin.cache
+
+# Flask-RESTful
+rest.cache
+
+# Flask-SocketIO
+socketio.cache
+
+# Flask-Security
+security.cache
+
+# Flask-User
+user.cache
+
+# Flask-Principal
+principal.cache
+
+# Flask-Babel
+babel.cache
+
+# Flask-Assets
+assets.cache
+
+# Flask-DebugToolbar
+debug.cache
+
+# Flask-Testing
+testing.cache
+
+# Flask-Script
+script.cache
+
+# Flask-Migrate
+migrate.cache
