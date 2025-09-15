@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from models import db, User, Event, EventAttendee, Notification, Comment
 from sqlalchemy.exc import SQLAlchemyError
 from flask import jsonify
+from push_notifications import push_notification_service
 
 class EventService:
     @staticmethod
@@ -100,6 +101,10 @@ class EventService:
             
             db.session.commit()
             
+            # Send push notifications
+            attendee_user_ids = [attendee.user_id for attendee in attendees]
+            push_notification_service.send_event_edit_notification(event_id, event.title, attendee_user_ids)
+            
             return event, {'message': 'Event updated successfully'}, 200
             
         except ValueError as e:
@@ -163,6 +168,23 @@ class EventService:
         except SQLAlchemyError as e:
             db.session.rollback()
             return None, {'error': 'Database error: ' + str(e)}, 500
+    
+    @staticmethod
+    def get_event_attendees(event_id):
+        """Get all attendees for an event"""
+        try:
+            event = Event.query.get(event_id)
+            if not event:
+                return None, {'error': 'Event not found'}, 404
+            
+            attendees = EventAttendee.query.filter_by(event_id=event_id)\
+                .join(User)\
+                .order_by(EventAttendee.registered_at.asc()).all()
+            
+            return attendees, None, 200
+            
+        except SQLAlchemyError as e:
+            return None, {'error': 'Database error: ' + str(e)}, 500
 
 class UserService:
     @staticmethod
@@ -222,6 +244,90 @@ class NotificationService:
             db.session.rollback()
             return None, {'error': 'Database error: ' + str(e)}, 500
     
+    @staticmethod
+    def create_event_reminder_notifications():
+        """Create reminder notifications for events starting soon"""
+        try:
+            from datetime import timedelta
+            
+            # Get events starting in the next 24 hours
+            now = datetime.utcnow().replace(tzinfo=timezone.utc)
+            tomorrow = now + timedelta(hours=24)
+            day_before = now + timedelta(hours=1)  # 1 hour before
+            
+            # Events starting in 1 hour (event_starting)
+            starting_soon_events = Event.query.filter(
+                Event.start_date >= now,
+                Event.start_date <= day_before,
+                Event.is_active == True
+            ).all()
+            
+            # Events starting in 24 hours (event_soon)
+            upcoming_events = Event.query.filter(
+                Event.start_date >= day_before,
+                Event.start_date <= tomorrow,
+                Event.is_active == True
+            ).all()
+            
+            notifications_created = 0
+            
+            # Create notifications for events starting in 1 hour
+            for event in starting_soon_events:
+                attendees = EventAttendee.query.filter_by(event_id=event.id).all()
+                for attendee in attendees:
+                    # Check if notification already exists
+                    existing = Notification.query.filter_by(
+                        user_id=attendee.user_id,
+                        event_id=event.id,
+                        type='event_starting'
+                    ).first()
+                    
+                    if not existing:
+                        notification = Notification(
+                            user_id=attendee.user_id,
+                            event_id=event.id,
+                            type='event_starting',
+                            message=f'🚀 "{event.title}" is starting in 1 hour!'
+                        )
+                        db.session.add(notification)
+                        notifications_created += 1
+            
+            # Create notifications for events starting in 24 hours
+            for event in upcoming_events:
+                attendees = EventAttendee.query.filter_by(event_id=event.id).all()
+                for attendee in attendees:
+                    # Check if notification already exists
+                    existing = Notification.query.filter_by(
+                        user_id=attendee.user_id,
+                        event_id=event.id,
+                        type='event_soon'
+                    ).first()
+                    
+                    if not existing:
+                        notification = Notification(
+                            user_id=attendee.user_id,
+                            event_id=event.id,
+                            type='event_soon',
+                            message=f'📅 "{event.title}" is tomorrow! Don\'t forget to attend.'
+                        )
+                        db.session.add(notification)
+                        notifications_created += 1
+            
+            db.session.commit()
+            
+            # Send push notifications for reminders
+            push_success, push_result = push_notification_service.send_reminder_notifications()
+            if push_success:
+                print(f"Push notifications sent: {push_result}")
+            else:
+                print(f"Push notification error: {push_result}")
+            
+            return notifications_created, None, 200
+            
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            return None, {'error': 'Database error: ' + str(e)}, 500
+
     @staticmethod
     def get_user_registered_events(user_id):
         """Get events a user is registered for"""
@@ -400,6 +506,10 @@ class CommentService:
                     db.session.add(notification)
 
             db.session.commit()
+            
+            # Send push notifications
+            attendee_user_ids = [attendee.user_id for attendee in attendees if attendee.user_id != user_id]
+            push_notification_service.send_comment_notification(event_id, commenter_name, event.title, attendee_user_ids)
 
             return comment, {'message': 'Comment created successfully'}, 201
 

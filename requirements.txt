@@ -7,3 +7,10 @@ Flask-Migrate==4.0.5
 python-dotenv==1.0.0
 PyJWT==2.8.0
 bcrypt==4.0.1
+
+# WSGI Servers
+gunicorn==21.2.0
+waitress==2.1.2
+
+# Push Notifications
+requests==2.31.0

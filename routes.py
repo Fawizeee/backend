@@ -324,6 +324,21 @@ def register_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/events/<int:event_id>/attendees', methods=['GET'])
+    @jwt_required()
+    def get_event_attendees(event_id):
+        try:
+            attendees, error, status = EventService.get_event_attendees(event_id)
+            if error:
+                return jsonify(error), status
+            
+            return jsonify({
+                'attendees': [attendee.to_dict() for attendee in attendees]
+            }), 200
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     # Notification Routes
     @app.route('/api/notifications', methods=['GET'])
     @jwt_required()
@@ -352,6 +367,67 @@ def register_routes(app):
             return jsonify(message), status
         return jsonify(message), 200
 
+    @app.route('/api/notifications/create-reminders', methods=['POST'])
+    def create_reminder_notifications():
+        """Create reminder notifications for upcoming events (can be called by cron job)"""
+        try:
+            count, error, status = NotificationService.create_event_reminder_notifications()
+            if error:
+                return jsonify(error), status
+            return jsonify({'message': f'Created {count} reminder notifications'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/notifications/register-device', methods=['POST'])
+    @jwt_required()
+    def register_device_token():
+        """Register device token for push notifications"""
+        try:
+            user_id = get_jwt_identity()
+            data = request.get_json()
+            
+            device_token = data.get('device_token')
+            platform = data.get('platform', 'unknown')
+            
+            if not device_token:
+                return jsonify({'error': 'Device token is required'}), 400
+            
+            # Store device token in user's profile
+            user = User.query.get(user_id)
+            if user:
+                try:
+                    # Update device tokens
+                    device_tokens = getattr(user, 'device_tokens', []) or []
+                    
+                    # Check if token already exists
+                    token_exists = any(token_obj.get('token') == device_token for token_obj in device_tokens)
+                    
+                    if not token_exists:
+                        device_tokens.append({
+                            'token': device_token,
+                            'platform': platform,
+                            'registered_at': datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
+                        })
+                        user.device_tokens = device_tokens
+                        db.session.commit()
+                        
+                        # Register token with push notification service
+                        push_notification_service.register_user_token(user_id, device_token)
+                        
+                        return jsonify({'message': 'Device token registered successfully'}), 200
+                    else:
+                        return jsonify({'message': 'Device token already registered'}), 200
+                        
+                except Exception as db_error:
+                    # If device_tokens column doesn't exist, just log and return success
+                    print(f"Device tokens column not available: {db_error}")
+                    return jsonify({'message': 'Device token registration not available'}), 200
+            else:
+                return jsonify({'error': 'User not found'}), 404
+                
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     # User Event Routes
     @app.route('/api/users/me/events', methods=['GET'])
     @jwt_required()
@@ -362,6 +438,22 @@ def register_routes(app):
             events, error, status = UserService.get_user_events(user_id)
             if error:
                 return jsonify(error), status
+            
+            return jsonify({
+                'events': [event.to_dict() for event in events]
+            }), 200
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/users/me/created-events', methods=['GET'])
+    @jwt_required()
+    def get_user_created_events():
+        try:
+            user_id = get_jwt_identity()
+            
+            # Get events created by the user
+            events = Event.query.filter_by(created_by=user_id).order_by(Event.created_at.desc()).all()
             
             return jsonify({
                 'events': [event.to_dict() for event in events]

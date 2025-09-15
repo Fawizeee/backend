@@ -18,6 +18,7 @@ class User(db.Model):
     year = db.Column(db.String(20), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     profile_picture = db.Column(db.String(255), nullable=True)
+    device_tokens = db.Column(db.JSON, default=list)  # For push notification tokens
     created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow().replace(tzinfo=timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.utcnow().replace(tzinfo=timezone.utc), onupdate=lambda: datetime.utcnow().replace(tzinfo=timezone.utc))
     
@@ -151,7 +152,10 @@ class EventAttendee(db.Model):
             'event_id': self.event_id,
             'user_id': self.user_id,
             'registered_at': self.registered_at.isoformat(),
-            'attended': self.attended
+            'attended': self.attended,
+            'user_name': f"{self.attendee.first_name} {self.attendee.last_name}" if self.attendee else None,
+            'user_profile_picture': self.attendee.profile_picture if self.attendee else None,
+            'user': self.attendee.to_dict() if self.attendee else None
         }
 
 # Comment Model
@@ -170,6 +174,14 @@ class Comment(db.Model):
     event = db.relationship('Event', backref='comments', lazy=True)
 
     def to_dict(self):
+        # Check if the user is an attendee of this event
+        is_attendee = False
+        if self.event and self.user:
+            is_attendee = EventAttendee.query.filter_by(
+                event_id=self.event_id, 
+                user_id=self.user_id
+            ).first() is not None
+        
         return {
             'id': self.id,
             'event_id': self.event_id,
@@ -179,7 +191,8 @@ class Comment(db.Model):
             'updated_at': self.updated_at.isoformat(),
             'user_name': f"{self.user.first_name} {self.user.last_name}" if self.user else None,
             'user_profile_picture': self.user.profile_picture if self.user else None,
-            'user': self.user.to_dict() if self.user else None
+            'user': self.user.to_dict() if self.user else None,
+            'is_attendee': is_attendee
         }
 
 # Notification Model
@@ -189,7 +202,7 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
-    type = db.Column(db.String(50), nullable=False)  # 'event_edited', 'event_cancelled', 'event_ended', 'new_comment'
+    type = db.Column(db.String(50), nullable=False)  # 'event_edited', 'event_cancelled', 'event_ended', 'new_comment', 'event_reminder', 'event_starting', 'event_soon'
     message = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow().replace(tzinfo=timezone.utc))
