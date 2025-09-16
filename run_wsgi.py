@@ -6,6 +6,9 @@ import os
 import sys
 import subprocess
 
+# Add the current directory to Python path to resolve imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 def run_gunicorn():
     """Run with Gunicorn (recommended for production)"""
     cmd = [
