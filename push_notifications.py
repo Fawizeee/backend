@@ -95,6 +95,46 @@ class PushNotificationService:
         # For now, just return success
         return True, "Reminder notifications sent"
     
+    def send_generic_notification(self, user_id: int, title: str, body: str, data: Dict = None) -> bool:
+        """Send a generic push notification to a specific user"""
+        if not self.enabled:
+            print(f"Push notification disabled: {title} - {body}")
+            return True
+        
+        token = self.get_user_token(user_id)
+        if not token:
+            print(f"No push token found for user {user_id}")
+            return False
+        
+        return self.send_push_notification(token, title, body, data)
+    
+    def send_notification_to_user(self, user_id: int, notification_type: str, message: str, event_id: int = None, data: Dict = None) -> bool:
+        """Send a push notification based on notification type and message"""
+        if not self.enabled:
+            print(f"Push notification disabled: {notification_type} - {message}")
+            return True
+        
+        # Map notification types to titles
+        title_map = {
+            'event_edited': 'Event Updated',
+            'new_comment': 'New Comment',
+            'event_starting': 'Event Starting Soon',
+            'event_soon': 'Event Tomorrow',
+            'event_created': 'New Event',
+            'event_cancelled': 'Event Cancelled',
+            'event_reminder': 'Event Reminder'
+        }
+        
+        title = title_map.get(notification_type, 'Notification')
+        
+        # Prepare data payload
+        notification_data = data or {}
+        if event_id:
+            notification_data['event_id'] = event_id
+        notification_data['type'] = notification_type
+        
+        return self.send_generic_notification(user_id, title, message, notification_data)
+    
     def send_comment_notification(self, event_id: int, commenter_name: str, event_title: str, attendee_user_ids: List[int]):
         """Send notification when someone comments on an event"""
         if not self.enabled:
@@ -116,4 +156,4 @@ class PushNotificationService:
         return True
 
 # Create singleton instance
-push_notification_service = PushNotificationService()
+PushNotificationService = PushNotificationService()

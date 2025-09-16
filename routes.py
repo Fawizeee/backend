@@ -1,8 +1,9 @@
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timezone
-from models import db, User, Event, EventAttendee
+from models import db, User, Event, EventAttendee, Notification
 from services import EventService, UserService, EventQueryService, NotificationService, CommentService
+from push_notifications import PushNotificationService
 from constants import PREDEFINED_TAGS
 
 def register_routes(app):
@@ -412,7 +413,7 @@ def register_routes(app):
                         db.session.commit()
                         
                         # Register token with push notification service
-                        push_notification_service.register_user_token(user_id, device_token)
+                        PushNotificationService.register_user_token(user_id, device_token)
                         
                         return jsonify({'message': 'Device token registered successfully'}), 200
                     else:
@@ -495,23 +496,7 @@ def register_routes(app):
             print(f"Traceback: {error_traceback}")
             return jsonify({'error': str(e)}), 500
 
-    # Categories Route - Removed (using tags instead)
-    # @app.route('/api/events/categories', methods=['GET'])
-    # def get_categories():
-    #     return jsonify({
-    #         'categories': [
-    #             'Academic',
-    #             'Social',
-    #             'Career',
-    #             'Workshop',
-    #             'Sports',
-    #             'Cultural',
-    #             'Volunteer',
-    #             'Networking'
-    #         ]
-    #     }), 200
-
-    # Comment Routes
+    
     @app.route('/api/events/<int:event_id>/comments', methods=['GET'])
     @jwt_required()
     def get_event_comments(event_id):

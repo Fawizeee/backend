@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from models import db, User, Event, EventAttendee, Notification, Comment
 from sqlalchemy.exc import SQLAlchemyError
 from flask import jsonify
-from push_notifications import push_notification_service
+from push_notifications import  PushNotificationService
 
 class EventService:
     @staticmethod
@@ -91,19 +91,12 @@ class EventService:
             # Create notifications for all attendees when event is edited
             attendees = EventAttendee.query.filter_by(event_id=event_id).all()
             for attendee in attendees:
-                notification = Notification(
+                NotificationService.create_notification_with_push(
                     user_id=attendee.user_id,
                     event_id=event_id,
-                    type='event_edited',
+                    notification_type='event_edited',
                     message=f'The event "{event.title}" has been updated by the organizer.'
                 )
-                db.session.add(notification)
-            
-            db.session.commit()
-            
-            # Send push notifications
-            attendee_user_ids = [attendee.user_id for attendee in attendees]
-            push_notification_service.send_event_edit_notification(event_id, event.title, attendee_user_ids)
             
             return event, {'message': 'Event updated successfully'}, 200
             
@@ -138,6 +131,14 @@ class EventService:
             
             db.session.add(attendance)
             db.session.commit()
+            
+            # Send notification to event creator about new registration
+            NotificationService.create_notification_with_push(
+                user_id=event.created_by,
+                event_id=event_id,
+                notification_type='event_created',
+                message=f'Someone registered for your event "{event.title}"'
+            )
             
             return attendance, {'message': 'Successfully registered for event'}, 201
             
@@ -198,6 +199,35 @@ class UserService:
             return None, {'error': 'Database error: ' + str(e)}, 500
 
 class NotificationService:
+    @staticmethod
+    def create_notification_with_push(user_id, event_id, notification_type, message, data=None):
+        """Create a notification in the database and send a push notification"""
+        try:
+            # Create the notification in database
+            notification = Notification(
+                user_id=user_id,
+                event_id=event_id,
+                type=notification_type,
+                message=message
+            )
+            db.session.add(notification)
+            db.session.commit()
+            
+            # Send push notification
+            PushNotificationService.send_notification_to_user(
+                user_id=user_id,
+                notification_type=notification_type,
+                message=message,
+                event_id=event_id,
+                data=data
+            )
+            
+            return notification, None, 200
+            
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            return None, {'error': 'Database error: ' + str(e)}, 500
+    
     @staticmethod
     def get_user_notifications(user_id):
         """Get all notifications for a user"""
@@ -283,13 +313,12 @@ class NotificationService:
                     ).first()
                     
                     if not existing:
-                        notification = Notification(
+                        NotificationService.create_notification_with_push(
                             user_id=attendee.user_id,
                             event_id=event.id,
-                            type='event_starting',
+                            notification_type='event_starting',
                             message=f'🚀 "{event.title}" is starting in 1 hour!'
                         )
-                        db.session.add(notification)
                         notifications_created += 1
             
             # Create notifications for events starting in 24 hours
@@ -304,23 +333,13 @@ class NotificationService:
                     ).first()
                     
                     if not existing:
-                        notification = Notification(
+                        NotificationService.create_notification_with_push(
                             user_id=attendee.user_id,
                             event_id=event.id,
-                            type='event_soon',
+                            notification_type='event_soon',
                             message=f'📅 "{event.title}" is tomorrow! Don\'t forget to attend.'
                         )
-                        db.session.add(notification)
                         notifications_created += 1
-            
-            db.session.commit()
-            
-            # Send push notifications for reminders
-            push_success, push_result = push_notification_service.send_reminder_notifications()
-            if push_success:
-                print(f"Push notifications sent: {push_result}")
-            else:
-                print(f"Push notification error: {push_result}")
             
             return notifications_created, None, 200
             
@@ -497,19 +516,12 @@ class CommentService:
             
             for attendee in attendees:
                 if attendee.user_id != user_id:  # Don't notify the commenter
-                    notification = Notification(
+                    NotificationService.create_notification_with_push(
                         user_id=attendee.user_id,
                         event_id=event_id,
-                        type='new_comment',
+                        notification_type='new_comment',
                         message=f'New comment on "{event.title}" by {commenter_name}'
                     )
-                    db.session.add(notification)
-
-            db.session.commit()
-            
-            # Send push notifications
-            attendee_user_ids = [attendee.user_id for attendee in attendees if attendee.user_id != user_id]
-            push_notification_service.send_comment_notification(event_id, commenter_name, event.title, attendee_user_ids)
 
             return comment, {'message': 'Comment created successfully'}, 201
 
