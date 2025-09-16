@@ -8,7 +8,7 @@ from datetime import timedelta
 
 # Environment Configuration
 # Change this value to switch between environments: 'lh' for localhost, 'prod' for production
-ENVIRONMENT_MODE = 'lh'  # Options: 'lh' (localhost) or 'prod' (production)
+ENVIRONMENT_MODE = ''  # Options: 'lh' (localhost) or 'prod' (production)
 
 # Environment-specific configurations
 # Change this value to switch between environments: 'lh' for localhost, 'prod' for production
